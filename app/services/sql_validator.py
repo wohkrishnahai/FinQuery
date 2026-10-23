@@ -51,12 +51,17 @@ def validate_sql(sql: str) -> str:
         )
 
     # Check every referenced table.
+    cte_names = {
+        cte.alias_or_name.lower()
+        for cte in tree.find_all(exp.CTE)
+    }
+
     tables = {
         table.name.lower()
         for table in tree.find_all(exp.Table)
     }
 
-    unauthorized_tables = tables - ALLOWED_TABLES
+    unauthorized_tables = tables - ALLOWED_TABLES - cte_names
 
     if unauthorized_tables:
         raise SQLValidationError(
